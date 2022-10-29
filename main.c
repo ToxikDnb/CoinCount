@@ -16,10 +16,13 @@ Code begins:
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 //Defining macros (global variables)
 #define introMessage "Welcome to CoinCount, the famous Coin Counter program from the 2020 GCSE NEA\nType 'Help' to get started\n"
 #define helpMessage "\tCommand options:\n\n\tHelp: Show this help message\n\tAdd: add a specific coin to the database\n\tTotal: View total amount of money collected\n\tWithdraw: Withdraw a given amount of money, calculated in change\n\tExit: Save changes and exit the program\n\n\n"
+#define unknownCommandMessage "Unknown Command, please type 'help' for more information\n"
+#define exitMessage "Thanks for choosing CoinCount, the famous Coin Counter program from the 2020 GCSE NEA!\n\n"
 #define coinTypes (int[]){1, 2, 5, 10, 20, 50, 100, 200}
 #define csvSeparator ';'
 #define path "coins.csv"
@@ -37,8 +40,9 @@ typedef struct coinDB{
 
 //Pre-define function names
 string readContents();
-coinDB cdbConvert();
-string remNewline();
+coinDB cdbConvert(string db);
+void firstLineOf(string *str);
+void toLower(string *str);
 
 //Main function that runs when application is launched
 int main(){
@@ -48,11 +52,26 @@ int main(){
     coinDB data = cdbConvert(rawData);
     printf(introMessage);
     while(isRunning){
+        //Get input and apply filter functions
         printf(">> ");
         fgets(command.contents, stringSize, stdin);
+        firstLineOf(&command);
+        toLower(&command);
         printf("\n");
-
+        //Command selector
+        if(!strcmp(command.contents, "help")){
+            printf(helpMessage);
+        }
+        else if(!strcmp(command.contents, "exit")){
+            printf(exitMessage);
+            isRunning = 0;
+        }
+        else{
+            printf(unknownCommandMessage);
+        }
     }
+    printf("Press enter to exit\n");
+    fgetc(stdin);
     return 0;
 }
 
@@ -87,4 +106,23 @@ coinDB cdbConvert(string db){
         characterCount++;
     }
     return data;
+}
+
+//Isolates the first line of a multi-line string
+void firstLineOf(string *str){
+    for(int i = 0; i < sizeof(str->contents)/sizeof(char); i++){
+        if(str->contents[i] == '\n'){
+            str->contents[i] = '\0';
+            break;
+        }
+    }
+}
+
+//Makes all characters in a string lowercase
+void toLower(string *str){
+    int count = 0;
+    while(str->contents[count] != '\0'){
+        str->contents[count] = tolower(str->contents[count]);
+        count++;
+    }
 }
