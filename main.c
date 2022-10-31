@@ -44,10 +44,12 @@ typedef struct coinDB{
 string readContents();
 coinDB cdbConvert(string db);
 void add(coinDB *data);
-void total(int* contents);
+void total(coinDB *data);
 void firstLineOf(string *str);
 void toLower(string *str);
 int isInList(string *str, int *array);
+void writeContents(coinDB *data);
+
 
 //Main function that runs when application is launched
 int main(){
@@ -77,13 +79,17 @@ int main(){
             add(&data);
         }
         else if(!strcmp(command.contents, "total")){
-            total(data.contents);
+            total(&data);
+        }
+        else if(!strcmp(command.contents, "save")){
+            writeContents(&data);
         }
         //If unknown command is entered
         else{
             printf(unknownCommandMessage);
         }
     }
+    writeContents(&data);
     printf("Press enter to exit\n");
     fgetc(stdin);
     return 0;
@@ -102,6 +108,9 @@ string readContents(){
 //Converts contents of file into coinDB structure
 coinDB cdbConvert(string db){
     coinDB data;
+    for(int i = 0; i < coinAmount; i++){
+        data.contents[i] = 0;
+    }
     char cChar;
     string cStr;
     int characterCount = 0, dataCount = 0, stringCount = 0;
@@ -118,9 +127,6 @@ coinDB cdbConvert(string db){
             stringCount++;
         }
         characterCount++;
-    }
-    for(int i = 0; i < 8; i++){
-        printf("%d, ", data.contents[i]);
     }
     return data;
 }
@@ -187,12 +193,27 @@ void add(coinDB *data){
 }
 
 //Procedure for getting total amount of coins
-void total(int *contents){
-    int totalPence = 0;
+void total(coinDB *data){
+    float totalPence = 0;
     for(int i = 0; i < coinAmount; i++){
-        printf("{%d, %d}\n", contents[i], coinTypes[i]);
-        totalPence += contents[i] * coinTypes[i];
+        totalPence += data->contents[i] * coinTypes[i];
     }
     float totalPounds = totalPence/100;
-    printf("The total amount of all coins is £%.2f", totalPounds);
+    printf("The total amount of all coins is £%.2f\n\n", totalPounds);
+}
+
+//Writes contents to coins.csv file
+void writeContents(coinDB *data){
+    string writtenString;
+    writtenString = (string){.contents = ""};
+    string curString = (string){.contents = ""};
+    for(int i = 0; i < coinAmount-1; i++){
+        snprintf(curString.contents, stringSize,"%d",data->contents[i]);
+        strcat(writtenString.contents, strcat(curString.contents, ";"));
+    }
+    snprintf(curString.contents, stringSize,"%d",data->contents[coinAmount-1]);
+    strcat(writtenString.contents, curString.contents);
+    FILE *f = fopen(path, "w");
+    fprintf(f, "%s", writtenString.contents);
+    fclose(f);
 }
