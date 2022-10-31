@@ -20,10 +20,11 @@ Code begins:
 
 //Defining macros (global variables)
 #define introMessage "Welcome to CoinCount, the famous Coin Counter program from the 2020 GCSE NEA\nType 'Help' to get started\n"
-#define helpMessage "\tCommand options:\n\n\tHelp: Show this help message\n\tAdd: add a specific coin to the database\n\tTotal: View total amount of money collected\n\tWithdraw: Withdraw a given amount of money, calculated in change\n\tExit: Save changes and exit the program\n\n\n"
+#define helpMessage "\tCommand options:\n\n\tHelp: Show this help message\n\tAdd: add a specific coin to the database\n\tTotal: View total amount of money collected\n\tWithdraw: Withdraw a given amount of money, calculated in change\n\tSave: Save changes manually\n\tExit: Save changes and exit the program\n\n\n"
 #define unknownCommandMessage "Unknown Command, please type 'help' for more information\n"
 #define exitMessage "Thanks for choosing CoinCount, the famous Coin Counter program from the 2020 GCSE NEA!\n\n"
 #define coinTypes (int[]){1, 2, 5, 10, 20, 50, 100, 200}
+#define coinAmount 8
 #define csvSeparator ';'
 #define path "coins.csv"
 #define stringSize 256
@@ -38,11 +39,15 @@ typedef struct coinDB{
     int contents[sizeof(coinTypes)/sizeof(coinTypes[0])];
 } coinDB;
 
+
 //Pre-define function names
 string readContents();
 coinDB cdbConvert(string db);
+void add(coinDB *data);
+void total(int* contents);
 void firstLineOf(string *str);
 void toLower(string *str);
+int isInList(string *str, int *array);
 
 //Main function that runs when application is launched
 int main(){
@@ -59,13 +64,22 @@ int main(){
         toLower(&command);
         printf("\n");
         //Command selector
+        //Shows help menu
         if(!strcmp(command.contents, "help")){
             printf(helpMessage);
         }
+        //Shows exit message and exits the program
         else if(!strcmp(command.contents, "exit")){
             printf(exitMessage);
             isRunning = 0;
         }
+        else if(!strcmp(command.contents, "add")){
+            add(&data);
+        }
+        else if(!strcmp(command.contents, "total")){
+            total(data.contents);
+        }
+        //If unknown command is entered
         else{
             printf(unknownCommandMessage);
         }
@@ -105,6 +119,9 @@ coinDB cdbConvert(string db){
         }
         characterCount++;
     }
+    for(int i = 0; i < 8; i++){
+        printf("%d, ", data.contents[i]);
+    }
     return data;
 }
 
@@ -125,4 +142,57 @@ void toLower(string *str){
         str->contents[count] = tolower(str->contents[count]);
         count++;
     }
+}
+
+//Checks if string item is in list of ints and returns position if found. -1 Indicates not found
+int isInList(string *str, int *array){
+    int result = -1;
+    int item = atoi(str->contents);
+    for(int i = 0; i < coinAmount; i++){
+        if(item == array[i]){
+            result = i;
+            break;
+        }
+    }
+    return result;
+}
+
+//Procedure for adding coins to total coins
+void add(coinDB *data){
+    int isInLoop = 1;
+            printf("Please enter the coin type, in pence, to add. Allowed values are: ");
+            for(int i = 0; i < coinAmount-1; i++){
+                printf("%d, ", coinTypes[i]);
+            }
+            printf("& %d.\nType 0 to exit from loop\n", coinTypes[coinAmount-1]);
+            string ans;
+            do{
+                printf(">> ");
+                fgets(ans.contents, stringSize, stdin);
+                firstLineOf(&ans);
+                printf("\n");
+                int pos = isInList(&ans, coinTypes);
+                if(pos >= 0 && pos <= coinAmount){
+                    data->contents[pos] += 1;
+                }
+                else if(!strcmp(ans.contents, "0")){
+                    printf("Main Menu: \n\n");
+                    isInLoop = 0;
+                }
+                else{
+                    printf("Please try again!\n");
+                }
+                strcpy(ans.contents, "\0");
+            } while(isInLoop);
+}
+
+//Procedure for getting total amount of coins
+void total(int *contents){
+    int totalPence = 0;
+    for(int i = 0; i < coinAmount; i++){
+        printf("{%d, %d}\n", contents[i], coinTypes[i]);
+        totalPence += contents[i] * coinTypes[i];
+    }
+    float totalPounds = totalPence/100;
+    printf("The total amount of all coins is £%.2f", totalPounds);
 }
