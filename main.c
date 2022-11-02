@@ -17,6 +17,7 @@ Code begins:
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 
 //Defining macros (global variables)
 #define introMessage "Welcome to CoinCount, the famous Coin Counter program from the 2020 GCSE NEA\nType 'Help' to get started\n"
@@ -44,11 +45,12 @@ typedef struct coinDB{
 string readContents();
 coinDB cdbConvert(string db);
 void add(coinDB *data);
-void total(coinDB *data);
+float total(coinDB *data);
 void firstLineOf(string *str);
 void toLower(string *str);
 int isInList(string *str, int *array);
 void writeContents(coinDB *data);
+void withdraw(coinDB *data);
 
 
 //Main function that runs when application is launched
@@ -79,10 +81,14 @@ int main(){
             add(&data);
         }
         else if(!strcmp(command.contents, "total")){
-            total(&data);
+            float tot = total(&data);
+            printf("The total amount of all coins is £%.2f\n\n", tot);
         }
         else if(!strcmp(command.contents, "save")){
             writeContents(&data);
+        }
+        else if(!strcmp(command.contents, "withdraw")){
+            withdraw(&data);
         }
         //If unknown command is entered
         else{
@@ -193,13 +199,13 @@ void add(coinDB *data){
 }
 
 //Procedure for getting total amount of coins
-void total(coinDB *data){
+float total(coinDB *data){
     float totalPence = 0;
     for(int i = 0; i < coinAmount; i++){
         totalPence += data->contents[i] * coinTypes[i];
     }
     float totalPounds = totalPence/100;
-    printf("The total amount of all coins is £%.2f\n\n", totalPounds);
+    return totalPounds;
 }
 
 //Writes contents to coins.csv file
@@ -216,4 +222,68 @@ void writeContents(coinDB *data){
     FILE *f = fopen(path, "w");
     fprintf(f, "%s", writtenString.contents);
     fclose(f);
+}
+
+//Procedure to copy one coinDB to another
+void copyCoinDB(coinDB *destination, coinDB *source){
+    for(int i = 0; i < coinAmount; i++){
+        destination->contents[i] = source->contents[i];
+    }
+}
+
+//Withdraws an amount from the moneybox, displays the best possible combination of coins to be taken out
+void withdraw(coinDB *data){
+    int tot = total(data)*100;
+    string ans;
+    printf("Please enter the amount you want to withdraw, in pence\n>> ");
+    fgets(ans.contents, stringSize, stdin);
+    printf("\n");
+    int amount = atoi(ans.contents);
+    int initAmount = amount;
+    if(tot < amount){
+        printf("You have not got enough money in your account to withdraw this amount.\n");
+    }
+    else{
+        coinDB afterCoin;
+        copyCoinDB(&afterCoin, data);
+        string coins, tempString;
+        strcpy(tempString.contents, "");
+        strcpy(coins.contents, "");
+        printf("The coins to withdraw this amount are: ");
+        int change;
+        for(int i = coinAmount-1; i >= 0; i--){
+            change = 1;
+            while(change){
+                if(amount-coinTypes[i] >= 0 && afterCoin.contents[i] > 0){
+                    afterCoin.contents[i] -= 1;
+                    amount -= coinTypes[i];
+                    if(coinTypes[i] >= 100){
+                        strcat(coins.contents, "£");
+                        int p = coinTypes[i]/100;
+                        sprintf(tempString.contents, "%d", p);
+                        strcat(coins.contents, tempString.contents);
+                    }
+                    else{
+                        sprintf(tempString.contents, "%d", coinTypes[i]);
+                        strcat(coins.contents, tempString.contents);
+                        strcat(coins.contents, "p");
+                    }
+                    strcat(coins.contents, ", ");
+                }
+                else{
+                    change = 0;
+                }
+            }
+            
+        }
+        if(amount == 0){
+            copyCoinDB(data, &afterCoin);
+            writeContents(data);
+            printf("The coins to withdraw this amount are: %s which totals £%.2f, which has now been withdrawn!\n", coins.contents, initAmount/100);
+        }
+        else{
+            printf("The value you submitted is unable to be taken out with the coins that you have.\n");
+        }
+        
+    }
 }
