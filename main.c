@@ -82,7 +82,7 @@ int main(){
         }
         else if(!strcmp(command.contents, "total")){
             float tot = total(&data);
-            printf("The total amount of all coins is £%.2f\n\n", tot);
+            printf("The total amount of all coins is \x9c%.2f\n\n", tot);
         }
         else if(!strcmp(command.contents, "save")){
             writeContents(&data);
@@ -239,7 +239,7 @@ void withdraw(coinDB *data){
     fgets(ans.contents, stringSize, stdin);
     printf("\n");
     int amount = atoi(ans.contents);
-    int initAmount = amount;
+    float initAmount = amount;
     if(tot < amount){
         printf("You have not got enough money in your account to withdraw this amount.\n");
     }
@@ -258,7 +258,7 @@ void withdraw(coinDB *data){
                     afterCoin.contents[i] -= 1;
                     amount -= coinTypes[i];
                     if(coinTypes[i] >= 100){
-                        strcat(coins.contents, "£");
+                        strcat(coins.contents, "\x9c");
                         int p = coinTypes[i]/100;
                         sprintf(tempString.contents, "%d", p);
                         strcat(coins.contents, tempString.contents);
@@ -277,9 +277,9 @@ void withdraw(coinDB *data){
             
         }
         if(amount == 0){
+            printf("The coins to withdraw this amount are: %s which totals \x9c%.2f, which has now been withdrawn!\n", coins.contents, initAmount/100);
             copyCoinDB(data, &afterCoin);
             writeContents(data);
-            printf("The coins to withdraw this amount are: %s which totals £%.2f, which has now been withdrawn!\n", coins.contents, initAmount/100);
         }
         else{
             printf("The value you submitted is unable to be taken out with the coins that you have.\n");
